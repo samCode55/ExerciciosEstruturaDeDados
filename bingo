@@ -1,0 +1,174 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+/*
+Coloquei o tamanho da cartela em uma constante pra não ter que ficar
+escrevendo 5 em tudo e também pra ficar mais fácil de mudar depois.
+*/
+#define TAM 5
+
+typedef enum {
+    B, I, N, G, O
+} Coluna;
+
+
+/*
+essa função gera um número aleatório entre o mínimo e o máximo
+o +1 aparentemente é importante porque sem ele o valor máximo não entraria no sorteio
+eu real tive que pedir pra ia me explicar qq tinha de errado aqui
+*/
+int gerarNumero(int minimo, int maximo) {
+    return minimo + rand() % (maximo - minimo + 1);
+}
+
+
+/*verifica se o número já existe naquela coluna
+fiz essa função porque não pode repetir número dentro da mesma coluna
+*/
+int numeroExiste(int cartela[TAM][TAM], int coluna, int numero) {
+
+    for (int i = 0; i < TAM; i++) {
+
+        //SE encontrar o número, retorna 1, que vou usar como verdadeiro xD
+        if (cartela[i][coluna] == numero)
+            return 1;
+    }
+
+    return 0;
+}
+
+
+/*
+coloca os números de uma coluna em ordem crescente
+fiz isso porque o desafio pede para ordenar as colunas
+*/
+void ordenarColuna(int cartela[TAM][TAM], int coluna) {
+
+    for (int i = 0; i < TAM - 1; i++) {
+        for (int j = i + 1; j < TAM; j++) {
+
+            /*
+            compara os elementos da coluna entre si.
+            se o primeiro número for maior que o segundo,
+            preciso trocar os dois de lugar
+            */
+            if (cartela[i][coluna] > cartela[j][coluna]) {
+
+                /*variável temporária para não perder um dos valores
+                durante a troca. demorei um pouco pra entender essa parte*/
+                int temp = cartela[i][coluna];
+
+                cartela[i][coluna] = cartela[j][coluna];
+                cartela[j][coluna] = temp;
+            }
+        }
+    }
+}
+
+
+void gerarCartela(int cartela[TAM][TAM]) {
+
+    /*
+    cada posição desses vetores corresponde a uma coluna.
+    B -> 1 a 15
+    I -> 16 a 30
+    N -> 31 a 45
+    G -> 46 a 60
+    O -> 61 a 75
+    isso aq foi horrivel de racionar ta?
+    */
+    int minimo[TAM] = {1, 16, 31, 46, 61};
+    int maximo[TAM] = {15, 30, 45, 60, 75};
+
+
+
+    for (int i = 0; i < TAM; i++) { //o primeiro for percorre as linhas, o segundo as colunas
+        for (int j = 0; j < TAM; j++) {
+            if (i == 2 && j == N) {
+
+                //usei 0 para representar o espaço livre
+                cartela[i][j] = 0;
+
+            } else {
+
+                int numero;
+
+
+                // O do-while é útil aqui porque eu preciso sortear
+                // pelo menos uma vez antes de verificar.
+                do {
+
+
+                    numero = gerarNumero(minimo[j], maximo[j]);
+
+                } while (numeroExiste(cartela, j, numero));
+
+                cartela[i][j] = numero;
+            }
+        }
+    }
+
+
+    // Depois de preencher a cartela, ordeno cada coluna.
+    for (int j = 0; j < TAM; j++)
+        ordenarColuna(cartela, j);
+}
+
+
+void imprimirCartela(int cartela[TAM][TAM], int numero) {
+
+    printf("\nCARTELA %d\n", numero);
+
+    // Cabeçalho com as letras do bingo.
+    printf(" B    I    N    G    O\n");
+
+
+    // Percorre a matriz novamente para imprimir os valores.
+    for (int i = 0; i < TAM; i++) {
+        for (int j = 0; j < TAM; j++) {
+
+            /* 
+            Se for o espaço central, mostro X em vez de 0,
+            porque fica mais parecido com uma cartela de bingo
+            */
+            if (i == 2 && j == N)
+                printf(" X   ");
+            else
+                printf("%2d   ", cartela[i][j]);
+        }
+
+        printf("\n");
+    }
+}
+
+
+int main() {
+
+    /*
+    inicializa o gerador de números aleatórios usando o horário atual
+    sem isso o rand pode gerar a mesma sequência toda vez
+    */
+    srand(time(NULL));
+
+    int quantidade;
+
+    printf("Quantidade de cartelas: ");
+    scanf("%d", &quantidade);
+
+    int cartelas[quantidade][TAM][TAM];
+
+    // gera e imprime todas as cartelas pedidas.
+    for (int c = 0; c < quantidade; c++) {
+
+        //passo a matriz daquela cartela para a função gerarcartela
+        gerarCartela(cartelas[c]);
+
+        //c + 1 é só para mostrar CARTELA 1 em vez de CARTELA 0
+        imprimirCartela(cartelas[c], c + 1);
+    }
+
+
+
+    return 0;
+}
